@@ -766,6 +766,12 @@ To show the \'Audio Track\' menu, change \'Spoof video streams\' to any client e
     <string name="morphe_hide_player_flyout_quality_footer_title">Hide Quality menu footer</string>
     <string name="morphe_hide_player_flyout_quality_header_title">Hide Quality menu header</string>
 
+    <!-- interaction.livechatdanmaku.liveChatDanmakuPatch -->
+    <string name="morphe_live_chat_danmaku_title">Live chat danmaku</string>
+    <string name="morphe_live_chat_danmaku_summary">Displays live chat messages as fullscreen scrolling comments over the video player</string>
+    <string name="morphe_live_chat_danmaku_color_title">Danmaku text color</string>
+    <string name="morphe_live_chat_danmaku_color_summary">ARGB hex color, for example #FFFFFFFF</string>
+
     <!-- layout.hide.autoplaypreview.hideAutoplayPreviewPatch -->
     <string name="morphe_hide_autoplay_preview_title">Hide autoplay preview</string>
     <string name="morphe_hide_autoplay_preview_summary">Hides the upcoming video preview in fullscreen before autoplay begins</string>

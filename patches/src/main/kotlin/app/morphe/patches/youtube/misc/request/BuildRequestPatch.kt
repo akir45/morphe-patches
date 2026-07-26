@@ -8,6 +8,7 @@
 package app.morphe.patches.youtube.misc.request
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
+import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod
@@ -41,9 +42,24 @@ internal val buildRequestPatch = bytecodePatch(
 
 internal fun hookBuildRequest(descriptor: String) {
     buildRequestMethod.get()!!.apply {
-        addInstruction(
+        addInstructions(
             builderIndex + 1,
-            "invoke-static { v$urlRegister, v$freeRegister }, $descriptor"
+            """
+                move-object v$freeRegister, p1
+                invoke-static { v$urlRegister, v$freeRegister }, $descriptor
+            """,
+        )
+    }
+}
+
+internal fun hookBuildRequestWithBody(descriptor: String) {
+    buildRequestMethod.get()!!.apply {
+        addInstructions(
+            builderIndex + 1,
+            """
+                move-object v$freeRegister, p2
+                invoke-static { v$urlRegister, v$freeRegister }, $descriptor
+            """,
         )
     }
 }

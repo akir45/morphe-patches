@@ -376,6 +376,10 @@ public class Settings extends SharedYouTubeSettings {
     public static final BooleanSetting HIDE_PLAYER_FLYOUT_QUALITY_HEADER = new BooleanSetting("morphe_hide_player_flyout_quality_header", FALSE, true, parentNot(HIDE_PLAYER_FLYOUT_QUALITY));
     public static final BooleanSetting HIDE_PLAYER_FLYOUT_WATCH_IN_VR = new BooleanSetting("morphe_hide_player_flyout_watch_in_vr", FALSE);
 
+    // Live chat danmaku
+    public static final BooleanSetting LIVE_CHAT_DANMAKU = new BooleanSetting("morphe_live_chat_danmaku", FALSE, true);
+    public static final StringSetting LIVE_CHAT_DANMAKU_COLOR = new StringSetting("morphe_live_chat_danmaku_color", "#FFFFFFFF", true, parent(LIVE_CHAT_DANMAKU));
+
     // General (Layout)
     public static final BooleanSetting DISABLE_LAYOUT_UPDATES = new BooleanSetting("morphe_disable_layout_updates", FALSE, true,"morphe_disable_layout_updates_user_dialog_message");
     public static final BooleanSetting DISABLE_TRANSLUCENT_STATUS_BAR = new BooleanSetting("morphe_disable_translucent_status_bar", FALSE, true, "morphe_disable_translucent_status_bar_user_dialog_message");

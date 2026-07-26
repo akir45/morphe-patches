@@ -23,6 +23,7 @@ internal object BuildRequestFingerprint : Fingerprint(
         val parameterTypesSize = parameterTypes.size
         (parameterTypesSize == 6 || parameterTypesSize == 7 || parameterTypesSize == 8) &&
                 parameterTypes[1] == "Ljava/util/Map;" &&
+                parameterTypes[2] == "[B" &&
                 methodDef.implementation != null &&
                 !methodDef.definingClass.startsWith("Lorg/") &&
                 indexOfNewUrlRequestBuilderInstruction(methodDef) >= 0
