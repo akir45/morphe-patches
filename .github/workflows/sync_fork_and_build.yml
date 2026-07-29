@@ -21,6 +21,7 @@ jobs:
       - name: Checkout fork
         uses: actions/checkout@v7
         with:
+          ref: dev
           fetch-depth: 0
           token: ${{ github.token }}
 
