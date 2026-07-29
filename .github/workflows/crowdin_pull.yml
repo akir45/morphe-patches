@@ -7,6 +7,7 @@ on:
 jobs:
   pull:
     name: Pull translations from Crowdin
+    if: github.repository == 'MorpheApp/morphe-patches'
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -34,7 +35,7 @@ jobs:
 
   merge:
     name: Squash merge Crowdin into Dev
-    if: github.event_name == 'workflow_dispatch'
+    if: github.repository == 'MorpheApp/morphe-patches' && github.event_name == 'workflow_dispatch'
     needs: pull
     permissions:
       contents: write

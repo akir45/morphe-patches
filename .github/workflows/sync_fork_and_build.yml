@@ -1,0 +1,60 @@
+name: Sync fork and build
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */6 * * *'
+
+concurrency:
+  group: sync-fork-and-build
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  sync-and-build:
+    name: Sync fork and build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v7
+        with:
+          ref: dev
+          fetch-depth: 0
+          token: ${{ github.token }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync from upstream
+        run: |
+          git remote add upstream https://github.com/MorpheApp/morphe-patches.git
+          git fetch upstream dev
+          git merge --no-edit upstream/dev
+          git push origin HEAD:dev
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Cache Gradle
+        uses: burrunan/gradle-cache-action@v3
+
+      - name: Build
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || github.token }}
+        run: ./gradlew :patches:buildAndroid --no-daemon
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: morphe-patches
+          archive: false
+          path: patches/build/libs
