@@ -12,6 +12,7 @@ env:
 jobs:
   pull-request:
     name: Open pull request
+    if: github.repository == 'MorpheApp/morphe-patches'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
