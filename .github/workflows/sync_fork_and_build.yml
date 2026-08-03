@@ -34,12 +34,15 @@ jobs:
         run: |
           git remote add upstream https://github.com/MorpheApp/morphe-patches.git
           git fetch upstream dev
-          git merge --no-edit upstream/dev || {
-            git merge --abort
-            echo "::warning::Normal upstream merge conflicted; retrying with fork-side conflict resolution."
-            git merge --no-edit -X ours upstream/dev
-          }
-          git push origin HEAD:dev
+          git merge --no-commit --no-ff -X ours upstream/dev
+          git checkout HEAD -- .github/workflows
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No upstream changes to sync."
+          else
+            git commit -m "Sync upstream dev"
+            git push origin HEAD:dev
+          fi
 
       - name: Setup Java
         uses: actions/setup-java@v5
