@@ -425,6 +425,7 @@ public final class FlyoutUtils {
         }
 
         final TextView textView = new TextView(context);
+        textView.setSingleLine(true);
         textView.setText(text);
         textView.setTextSize(16);
         textView.setTypeface(null, Typeface.BOLD);
