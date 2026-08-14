@@ -9,6 +9,7 @@ import app.morphe.patches.youtube.misc.extension.sharedExtensionPatch
 import app.morphe.patches.youtube.misc.settings.PreferenceScreen
 import app.morphe.patches.youtube.misc.settings.settingsPatch
 import app.morphe.patches.youtube.shared.Constants.COMPATIBILITY_YOUTUBE
+import app.morphe.util.insertLiteralOverride
 import app.morphe.util.matchAllMethodIndicesForEach
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 
@@ -33,7 +34,8 @@ val disableVideoCodecsPatch = bytecodePatch(
             SwitchPreference(
                 key = "morphe_force_avc_codec",
                 tag = "app.morphe.extension.youtube.settings.preference.ForceAVCSwitchPreference"
-            )
+            ),
+            SwitchPreference("morphe_force_av1_in_shorts")
         )
 
         Vp9CapabilityFingerprint.method.addInstructionsWithLabels(
@@ -55,6 +57,13 @@ val disableVideoCodecsPatch = bytecodePatch(
             replaceInstruction(
                 index,
                 "invoke-static/range { v$register .. v$register }, $EXTENSION_CLASS->disableHdrVideo(Landroid/view/Display\$HdrCapabilities;)[I"
+            )
+        }
+
+        ReelForcedAV1HWDecodeFeatureFlagFingerprint.apply {
+            method.insertLiteralOverride(
+                instructionMatches.first().index,
+                "$EXTENSION_CLASS->useReelItemWatchResponseFeatureFlag(Z)Z"
             )
         }
     }

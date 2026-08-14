@@ -1,6 +1,7 @@
 package app.morphe.patches.youtube.video.codecs
 
 import app.morphe.patcher.Fingerprint
+import app.morphe.patcher.literal
 import app.morphe.patcher.methodCall
 import com.android.tools.smali.dexlib2.AccessFlags
 
@@ -22,5 +23,11 @@ internal object Vp9CapabilityFingerprint : Fingerprint(
     strings = listOf(
         "vp9_supported",
         "video/x-vnd.on2.vp9"
+    )
+)
+
+internal object ReelForcedAV1HWDecodeFeatureFlagFingerprint : Fingerprint(
+    filters = listOf(
+        literal(45658487L)
     )
 )
