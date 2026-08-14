@@ -2,6 +2,7 @@ package app.morphe.extension.youtube.patches;
 
 import android.view.Display;
 
+import app.morphe.extension.shared.Logger;
 import app.morphe.extension.youtube.settings.Settings;
 
 @SuppressWarnings({"unused", "deprecation", "RedundantSuppression"})
@@ -21,6 +22,18 @@ public class DisableVideoCodecsPatch {
      */
     public static boolean allowVP9() {
         return !Settings.FORCE_AVC_CODEC.get();
+    }
+
+
+    /**
+     * Injection point.
+     */
+    public static boolean useReelForcedAV1HWDecodeFeatureFlag(boolean original) {
+        if (original) {
+            Logger.printDebug(() -> "useReelForcedAV1HWDecode is set on");
+        }
+
+        return Settings.FORCE_AV1_IN_SHORTS.get();
     }
 }
 
