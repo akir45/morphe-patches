@@ -19,7 +19,6 @@ import app.morphe.patches.youtube.misc.extension.sharedExtensionPatch
 import app.morphe.patches.youtube.misc.settings.PreferenceScreen
 import app.morphe.patches.youtube.misc.settings.settingsPatch
 import app.morphe.patches.youtube.shared.Constants.COMPATIBILITY_YOUTUBE
-import app.morphe.util.insertLiteralOverride
 import app.morphe.util.matchAllMethodIndicesForEach
 import com.android.tools.smali.dexlib2.iface.instruction.FiveRegisterInstruction
 
@@ -44,8 +43,7 @@ val disableVideoCodecsPatch = bytecodePatch(
             SwitchPreference(
                 key = "morphe_force_avc_codec",
                 tag = "app.morphe.extension.youtube.settings.preference.ForceAVCSwitchPreference"
-            ),
-            SwitchPreference("morphe_force_av1_in_shorts")
+            )
         )
 
         Vp9CapabilityFingerprint.method.addInstructionsWithLabels(
