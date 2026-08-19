@@ -745,35 +745,104 @@ public final class LiveChatDanmakuPatch {
 
     @Nullable
     private static WebContinuation fetchWebInitialContinuation(String videoId) {
-        HttpURLConnection connection = null;
+        String[] pageUrls = {
+                "https://www.youtube.com/watch?v=" + videoId,
+                "https://www.youtube.com/live_chat_replay?is_popout=1&v=" + videoId,
+                "https://www.youtube.com/live_chat?is_popout=1&v=" + videoId
+        };
+
+        for (String pageUrl : pageUrls) {
+            try {
+                String html = downloadWebPage(pageUrl);
+                updateWebApiKey(html);
+
+                String continuation = extractLiveChatContinuation(html);
+                if (continuation == null || continuation.isEmpty()) {
+                    continue;
+                }
+
+                boolean replay = isReplayChatPage(html) || pageUrl.contains("live_chat_replay");
+                Logger.printInfo(() -> "LiveChatDanmaku: web continuation found, replay=" + replay);
+                return new WebContinuation(continuation, replay);
+            } catch (Exception ex) {
+            }
+        }
+
+        Logger.printInfo(() -> "LiveChatDanmaku: web continuation not found");
+        return null;
+    }
+
+    private static String downloadWebPage(String pageUrl) throws Exception {
+        HttpURLConnection connection = (HttpURLConnection) new URL(pageUrl).openConnection();
         try {
-            URL url = new URL("https://www.youtube.com/live_chat?is_popout=1&v=" + videoId);
-            connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("User-Agent", WEB_USER_AGENT);
             connection.setRequestProperty("Accept-Language", Locale.getDefault().toLanguageTag());
             connection.setConnectTimeout(CONNECTION_TIMEOUT_MILLISECONDS);
             connection.setReadTimeout(CONNECTION_TIMEOUT_MILLISECONDS);
-            String html = readFully(connection.getInputStream());
-            latestWebApiKey = extractQuotedValue(html, "INNERTUBE_API_KEY");
-            if (latestWebApiKey.isEmpty()) {
-                latestWebApiKey = extractJsonField(html, "innertubeApiKey");
+            connection.setUseCaches(false);
+
+            int responseCode = connection.getResponseCode();
+            InputStream inputStream = responseCode >= 400
+                    ? connection.getErrorStream()
+                    : connection.getInputStream();
+            String response = readFully(inputStream);
+            if (responseCode >= 400) {
+                throw new IllegalStateException("YouTube web page failed: " + responseCode);
             }
-            String continuation = extractJsonField(html, "continuation");
-            if (continuation == null || continuation.isEmpty()) {
-                return null;
-            }
-            boolean replay = html.contains("liveChatReplayRenderer")
-                    || html.contains("live_chat_replay")
-                    || html.contains("get_live_chat_replay");
-            return new WebContinuation(continuation, replay);
-        } catch (Exception ex) {
-            return null;
+            return response;
         } finally {
-            if (connection != null) {
-                connection.disconnect();
+            connection.disconnect();
+        }
+    }
+
+    private static void updateWebApiKey(String html) {
+        String apiKey = extractQuotedValue(html, "INNERTUBE_API_KEY");
+        if (apiKey.isEmpty()) {
+            apiKey = extractJsonField(html, "innertubeApiKey");
+        }
+        if (!apiKey.isEmpty()) {
+            latestWebApiKey = apiKey;
+        }
+    }
+
+    @Nullable
+    private static String extractLiveChatContinuation(String html) {
+        int rendererIndex = html.indexOf("\"liveChatRenderer\"");
+        if (rendererIndex >= 0) {
+            String continuation = extractJsonFieldAfter(html, "continuation", rendererIndex);
+            if (continuation != null && !continuation.isEmpty()) {
+                return continuation;
             }
         }
+
+        int replayRendererIndex = html.indexOf("\"liveChatReplayRenderer\"");
+        if (replayRendererIndex >= 0) {
+            String continuation = extractJsonFieldAfter(html, "continuation", replayRendererIndex);
+            if (continuation != null && !continuation.isEmpty()) {
+                return continuation;
+            }
+        }
+
+        String continuation = extractJsonField(html, "continuation");
+        return continuation == null || continuation.isEmpty() ? null : continuation;
+    }
+
+    private static boolean isReplayChatPage(String html) {
+        int rendererIndex = html.indexOf("\"liveChatRenderer\"");
+        if (rendererIndex >= 0) {
+            int rendererEnd = Math.min(html.length(), rendererIndex + 32_768);
+            String renderer = html.substring(rendererIndex, rendererEnd);
+            if (renderer.contains("\"isReplay\":true")
+                    || renderer.contains("\"liveChatReplayRenderer\"")
+                    || renderer.contains("get_live_chat_replay")) {
+                return true;
+            }
+        }
+
+        return html.contains("\"liveChatReplayRenderer\"")
+                || html.contains("\"isReplay\":true")
+                || html.contains("get_live_chat_replay");
     }
 
     private static LiveChatResponse fetchLiveChatWebContinuation(String continuation, boolean replay) throws Exception {
@@ -796,6 +865,9 @@ public final class LiveChatDanmakuPatch {
         result.timeoutMilliseconds = findTimeoutMilliseconds(response);
         result.replay = replay || hasReplayOffset(response);
         collectLiveChatMessages(response, result.messages);
+        Logger.printInfo(() -> "LiveChatDanmaku: web response replay=" + result.replay
+                + ", messages=" + result.messages.size()
+                + ", continuation=" + (result.continuation != null));
         return result;
     }
 
@@ -1084,8 +1156,12 @@ public final class LiveChatDanmakuPatch {
     }
 
     private static String extractJsonField(String text, String key) {
+        return extractJsonFieldAfter(text, key, 0);
+    }
+
+    private static String extractJsonFieldAfter(String text, String key, int fromIndex) {
         String marker = "\"" + key + "\":\"";
-        int start = text.indexOf(marker);
+        int start = text.indexOf(marker, Math.max(0, fromIndex));
         if (start < 0) {
             return "";
         }
@@ -1126,6 +1202,12 @@ public final class LiveChatDanmakuPatch {
             if (continuation != null) return continuation;
 
             continuation = continuationFromKnownData(object, "reloadContinuationData");
+            if (continuation != null) return continuation;
+
+            continuation = continuationFromKnownData(object, "liveChatReplayContinuationData");
+            if (continuation != null) return continuation;
+
+            continuation = continuationFromKnownData(object, "playerSeekContinuationData");
             if (continuation != null) return continuation;
 
             Iterator<String> keys = object.keys();
@@ -1254,6 +1336,14 @@ public final class LiveChatDanmakuPatch {
                 long timeout = timedContinuationData.optLong("timeoutMs", 0L);
                 if (timeout > 0) {
                     return timeout;
+                }
+            }
+
+            JSONObject replayContinuationData = object.optJSONObject("liveChatReplayContinuationData");
+            if (replayContinuationData != null) {
+                long timeout = replayContinuationData.optLong("timeUntilLastMessageMsec", 0L);
+                if (timeout > 0) {
+                    return Math.min(timeout, DEFAULT_POLL_INTERVAL_MILLISECONDS);
                 }
             }
 

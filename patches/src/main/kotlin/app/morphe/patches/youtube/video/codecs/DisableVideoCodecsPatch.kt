@@ -67,12 +67,5 @@ val disableVideoCodecsPatch = bytecodePatch(
                 "invoke-static/range { v$register .. v$register }, $EXTENSION_CLASS->disableHdrVideo(Landroid/view/Display\$HdrCapabilities;)[I"
             )
         }
-
-        ReelForcedAV1HWDecodeFeatureFlagFingerprint.apply {
-            method.insertLiteralOverride(
-                instructionMatches.first().index,
-                "$EXTENSION_CLASS->useReelItemWatchResponseFeatureFlag(Z)Z"
-            )
-        }
     }
 }
