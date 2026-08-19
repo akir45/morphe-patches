@@ -31,17 +31,24 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Sync from upstream
+        id: sync
         run: |
+          echo "base_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           git remote add upstream https://github.com/MorpheApp/morphe-patches.git
           git fetch upstream dev
-          git merge --no-commit --no-ff -X ours upstream/dev
+          if ! git merge --no-commit --no-ff -X ours upstream/dev; then
+            echo "::warning::Upstream merge conflicted; keeping the current dev branch."
+            git merge --abort
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           git checkout HEAD -- .github/workflows
           git add -A
           if git diff --cached --quiet; then
             echo "No upstream changes to sync."
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
           else
-            git commit -m "Sync upstream dev"
-            git push origin HEAD:dev
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Setup Java
@@ -53,7 +60,26 @@ jobs:
       - name: Cache Gradle
         uses: burrunan/gradle-cache-action@v3
 
-      - name: Build
+      - name: Build merged tree
+        id: merged_build
+        continue-on-error: true
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || github.token }}
+        run: ./gradlew :patches:buildAndroid --no-daemon
+
+      - name: Commit verified sync
+        if: steps.merged_build.outcome == 'success' && steps.sync.outputs.has_changes == 'true'
+        run: |
+          git commit -m "Sync upstream dev"
+          git push origin HEAD:dev
+
+      - name: Restore current dev after incompatible sync
+        if: steps.merged_build.outcome == 'failure'
+        run: git reset --hard "${{ steps.sync.outputs.base_sha }}"
+
+      - name: Build current dev fallback
+        if: steps.merged_build.outcome == 'failure'
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || github.token }}
