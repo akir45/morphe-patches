@@ -414,17 +414,7 @@ public final class VideoInformation {
      */
     public static void setAudioPitch(float currentAudioPitch) {
         Logger.printDebug(() -> "Audio pitch set to: " + currentAudioPitch);
-        final float previousPlaybackSpeed = playbackSpeed;
-        if (!updatePlaybackAudioPitchValue(currentAudioPitch)) {
-            return;
-        }
-
-        RememberPlaybackSpeedPatch.userSelectedPlaybackAudioPitch(playbackAudioPitch);
-        if (!Settings.PLAYBACK_AUDIO_TIME_STRETCHING.get() && previousPlaybackSpeed != playbackSpeed) {
-            RememberPlaybackSpeedPatch.userSelectedPlaybackSpeed(playbackSpeed);
-            changePlaybackSpeed(playbackSpeed);
-        }
-        setPlaybackParameters(playbackSpeed, playbackAudioPitch);
+        updatePlaybackAudioPitchValue(currentAudioPitch);
     }
 
     /**
@@ -872,16 +862,7 @@ public final class VideoInformation {
      * @param newlyLoadedPlaybackSpeed The current playback speed.
      */
     public static void setPlaybackSpeed(float newlyLoadedPlaybackSpeed) {
-        if (!updatePlaybackSpeedValue(newlyLoadedPlaybackSpeed)) {
-            return;
-        }
-
-        RememberPlaybackSpeedPatch.userSelectedPlaybackSpeed(playbackSpeed);
-        if (!Settings.PLAYBACK_AUDIO_TIME_STRETCHING.get()) {
-            RememberPlaybackSpeedPatch.userSelectedPlaybackAudioPitch(playbackAudioPitch);
-            setPlaybackParameters(playbackSpeed, playbackAudioPitch);
-        }
-        changePlaybackSpeed(playbackSpeed);
+        updatePlaybackSpeedValue(newlyLoadedPlaybackSpeed);
     }
 
     /**
