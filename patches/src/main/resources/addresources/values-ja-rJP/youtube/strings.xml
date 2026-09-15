@@ -839,6 +839,9 @@ APIキーは決して共有しないでください。アクセス権を持つ�
   <!-- layout.panels.popup.disablePlayerPopupPanelsPatch -->
   <string name="morphe_disable_player_popup_panels_title">プレーヤー ポップアップ パネルを無効化</string>
   <string name="morphe_disable_player_popup_panels_summary">プレイリストやライブ配信のチャット欄の自動表示を無効にします</string>
+  <!-- interaction.playlistautoplay.disablePlaylistAutoplayPatch -->
+  <string name="morphe_disable_playlist_autoplay_title">再生リストの自動再生を無効化</string>
+  <string name="morphe_disable_playlist_autoplay_summary">再生リスト内の動画終了時に次の動画を自動再生せず停止します</string>
   <!-- layout.player.fullscreen.exitFullscreenPatch -->
   <string name="morphe_exit_fullscreen_title">再生終了時に全画面表示を解除</string>
   <string name="morphe_exit_fullscreen_entry_1">無効</string>
