@@ -10,6 +10,7 @@ package app.morphe.extension.youtube.patches;
 import android.view.View;
 import android.widget.ImageView;
 
+import app.morphe.extension.shared.Logger;
 import app.morphe.extension.shared.Utils;
 import app.morphe.extension.shared.settings.Setting;
 import app.morphe.extension.shared.spoof.SpoofAppVersionPatch;
@@ -61,10 +62,21 @@ public class LegacyPlayerControlsPatch {
     /**
      * Injection point.
      */
-    public static boolean allowModernAccessibilityFeatureFlag(boolean original) {
+    public static boolean allowModernPlayerLayoutFlags(boolean original) {
         if (RESTORE_OLD_PLAYER_BUTTONS) {
             return false; // Flag causes app crash on startup if old player buttons is used.
         }
         return original;
+    }
+
+    /**
+     * Injection point.
+     */
+    public static boolean useModernPlayerTopControls(boolean original) {
+        if (original) {
+            Logger.printDebug(() -> "useModernPlayerTopControls is set on");
+        }
+
+        return false;
     }
 }

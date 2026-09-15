@@ -6,10 +6,10 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.fieldAccess
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patches.all.misc.resources.ResourceType
-import app.morphe.patches.all.misc.resources.resourceLiteral
-import app.morphe.patches.all.misc.resources.resourceMappingPatch
+import app.morphe.patcher.resource.ResourceType
+import app.morphe.patcher.resourceLiteral
 import app.morphe.patches.youtube.misc.extension.sharedExtensionPatch
+import app.morphe.patches.youtube.shared.getPlayerTypeFingerprint
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
@@ -19,17 +19,10 @@ private const val EXTENSION_CLASS = "Lapp/morphe/extension/youtube/patches/Playe
 val playerTypeHookPatch = bytecodePatch(
     description = "Hook to get the current player type and video playback state.",
 ) {
-    dependsOn(sharedExtensionPatch, resourceMappingPatch)
+    dependsOn(sharedExtensionPatch)
 
     execute {
-        Fingerprint(
-            definingClass = "/YouTubePlayerOverlaysLayout;",
-            accessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.FINAL),
-            returnType = "V",
-            parameters = listOf(
-                PlayerTypeEnumFingerprint.originalClassDef.type
-            )
-        ).method.addInstruction(
+        getPlayerTypeFingerprint().method.addInstruction(
             0,
             "invoke-static { p1 }, $EXTENSION_CLASS->setPlayerType(Ljava/lang/Enum;)V",
         )

@@ -9,10 +9,9 @@ package app.morphe.extension.music.patches;
 
 import android.app.Activity;
 import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.Nullable;
-
-import com.facebook.litho.ComponentHost;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -169,8 +168,8 @@ public final class DownloadsPatch {
             }
             Utils.verifyOnMainThread();
 
-            if (map.get(ELEMENTS_SENDER_VIEW) instanceof ComponentHost componentHost) {
-                CharSequence contentDescription = componentHost.getContentDescription();
+            if (map.get(ELEMENTS_SENDER_VIEW) instanceof ViewGroup senderViewGroup) {
+                CharSequence contentDescription = senderViewGroup.getContentDescription();
                 if (contentDescription != null && downloadButtonLabel.equals(contentDescription.toString())) {
                     final long now = System.currentTimeMillis();
                     if (now - lastMainPlayerDownloadTime < IGNORE_DOUBLE_CLICK_DURATION_MS) {
@@ -228,15 +227,33 @@ public final class DownloadsPatch {
             final boolean isDownloadClick = Utils.containsAny(p1String,
                     "[133724106]", "[443434441]");
             if (isDownloadClick) {
+                Object viewObj = map.get(ELEMENTS_SENDER_VIEW);
+
+                if (viewObj == null) {
+                    Logger.printDebug(() -> "Ignored programmatic download click (no sender_view).");
+                    return false;
+                }
+
+                if (viewObj instanceof ViewGroup senderViewGroup) {
+                    CharSequence cd = senderViewGroup.getContentDescription();
+                    if (cd != null && !downloadButtonLabel.isEmpty()) {
+                        String cdLower = cd.toString().toLowerCase();
+                        String labelLower = downloadButtonLabel.toLowerCase();
+
+                        if (!cdLower.contains(labelLower) && !labelLower.contains(cdLower)) {
+                            Logger.printDebug(() -> "Ignored false positive UI click (Content description mismatch).");
+                            return false;
+                        }
+                    }
+                }
+
                 Logger.printDebug(() -> "Flyout isDownloadClick");
                 final long now = System.currentTimeMillis();
                 if (now - lastFlyoutDownloadTime < IGNORE_DOUBLE_CLICK_DURATION_MS) {
                     return true;
                 }
 
-                Object viewObj = map.get(ELEMENTS_SENDER_VIEW);
                 final boolean inDialog = isViewInsideDialog(viewObj);
-
                 String targetId = extractVideoIdFromCommand(p1);
 
                 if (targetId == null && inDialog) {

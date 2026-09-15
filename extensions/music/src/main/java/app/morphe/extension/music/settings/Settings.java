@@ -90,6 +90,7 @@ public class Settings extends SharedYouTubeSettings {
     public static final BooleanSetting HIDE_ACTION_BAR = new BooleanSetting("morphe_music_hide_action_bar", FALSE, true);
     public static final BooleanSetting HIDE_LIKE_DISLIKE_BUTTON = new BooleanSetting("morphe_music_hide_like_dislike_button", FALSE, true, parentNot(HIDE_ACTION_BAR));
     public static final BooleanSetting HIDE_COMMENTS_BUTTON = new BooleanSetting("morphe_music_hide_comments_button", FALSE, true, parentNot(HIDE_ACTION_BAR));
+    public static final BooleanSetting HIDE_LIVE_CHAT_REPLAY_BUTTON = new BooleanSetting("morphe_music_hide_live_chat_replay_button", FALSE, true, parentNot(HIDE_ACTION_BAR));
     public static final BooleanSetting HIDE_LYRICS_BUTTON = new BooleanSetting("morphe_music_hide_lyrics_button", FALSE, true, parentNot(HIDE_ACTION_BAR));
     public static final BooleanSetting HIDE_SHARE_BUTTON = new BooleanSetting("morphe_music_hide_share_button", FALSE, true, parentNot(HIDE_ACTION_BAR));
     public static final BooleanSetting HIDE_SAVE_BUTTON = new BooleanSetting("morphe_music_hide_save_button", FALSE, true, parentNot(HIDE_ACTION_BAR));
@@ -150,6 +151,8 @@ public class Settings extends SharedYouTubeSettings {
     // Miscellaneous
     public static final EnumSetting<ClientType> SPOOF_VIDEO_STREAMS_CLIENT_TYPE = new EnumSetting<>("morphe_spoof_video_streams_client_type", ClientType.VISIONOS_1_02, true, parent(SPOOF_VIDEO_STREAMS));
 
+    public static final BooleanSetting PLAY_ALBUMS_SONGS = new BooleanSetting("morphe_music_play_album_songs", FALSE, true, parent(SPOOF_VIDEO_STREAMS));
+
     // Scrobbling
     public static final BooleanSetting LISTENBRAINZ_SCROBBLING = new BooleanSetting("morphe_music_listenbrainz_enabled", FALSE, true);
     public static final StringSetting LISTENBRAINZ_USER_TOKEN = new StringSetting("morphe_music_listenbrainz_token", "", false, parent(LISTENBRAINZ_SCROBBLING));
@@ -168,6 +171,7 @@ public class Settings extends SharedYouTubeSettings {
     public static final BooleanSetting SCROBBLING_METADATA_CLEANUP = new BooleanSetting("morphe_music_scrobbling_metadata_cleanup", TRUE, true, parentsAny(LISTENBRAINZ_SCROBBLING, LASTFM_SCROBBLING));
     public static final StringSetting SCROBBLING_CUSTOM_REGEX = new StringSetting("morphe_music_scrobbling_custom_regex", "", true, parentsAll(parent(SCROBBLING_METADATA_CLEANUP), parentsAny(LISTENBRAINZ_SCROBBLING, LASTFM_SCROBBLING)));
     public static final BooleanSetting SCROBBLING_PARSE_TITLE = new BooleanSetting("morphe_music_scrobbling_parse_title", FALSE, true, parentsAny(LISTENBRAINZ_SCROBBLING, LASTFM_SCROBBLING));
+    public static final BooleanSetting SCROBBLING_GUESS_ALBUM = new BooleanSetting("morphe_music_scrobbling_guess_album", FALSE, true, parentsAny(LISTENBRAINZ_SCROBBLING, LASTFM_SCROBBLING));
 
     // Lyrics
     public static final BooleanSetting LYRICS_ENABLED = new BooleanSetting("morphe_music_lyrics_enabled", FALSE, true);

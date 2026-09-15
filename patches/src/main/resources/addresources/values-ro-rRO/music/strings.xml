@@ -21,6 +21,10 @@ Second \"item\" text"</string>
   <string name="morphe_header_logo_title">Siglă antet</string>
   <string name="morphe_header_logo_entry_1">Implicit</string>
   <string name="morphe_header_logo_entry_3">Personalizat</string>
+  <!-- misc.album.albumMusicVideoPatch -->
+  <string name="morphe_music_play_album_songs_title">Redă piesele audio ale albumului</string>
+  <!-- 'Spoof video streams' should match the language used in 'morphe_spoof_video_streams_screen_title' -->
+  <string name="morphe_music_play_album_songs_summary">Redă numai versiunea audio a melodiilor din album în loc de un videoclip muzical. Necesită \'Spoof video streams\'</string>
   <!-- interaction.downloads.downloadsPatch -->
   <string name="morphe_external_downloader_screen_summary">Descarcă videoclipuri muzicale, podcasturi sau melodii folosind aplicații de descărcare terțe</string>
   <!-- 'Download' should be translated using the same localized wording YouTube displays for the button. -->
@@ -145,6 +149,8 @@ YouTube Music 8.x — estomparea încrucișată funcționează doar pe 9.x și v
   <string name="morphe_music_hide_action_bar_title">Ascunde bara de acțiune</string>
   <string name="morphe_music_hide_like_dislike_button_title">Ascunde butonul Like și Dislike</string>
   <string name="morphe_music_hide_comments_button_title">Ascunde butonul Comentarii</string>
+  <!-- 'Live chat replay' should be translated using the same localized wording YouTube Music displays for the button. -->
+  <string name="morphe_music_hide_live_chat_replay_button_title">Ascunde butonul \'Reluarea chatului live\'</string>
   <!-- 'Lyrics' should be translated using the same localized wording YouTube Music displays for the button. -->
   <string name="morphe_music_hide_lyrics_button_title">Ascunde butonul Versuri</string>
   <!-- 'Share' should be translated using the same localized wording YouTube Music displays for the button. -->
@@ -154,7 +160,7 @@ YouTube Music 8.x — estomparea încrucișată funcționează doar pe 9.x și v
   <!-- 'Download' should be translated using the same localized wording YouTube Music displays for the button. -->
   <string name="morphe_music_hide_download_button_title">Ascunde butonul Descarcă</string>
   <!-- 'Start radio' should be translated using the same localized wording YouTube Music displays for the button. -->
-  <string name="morphe_music_hide_radio_button_title">Ascunde butonul Pornește radioul</string>
+  <string name="morphe_music_hide_radio_button_title">Ascunde butonul \'Pornește radioul\'</string>
   <!-- flyoutmenu.components.hideFlyoutMenuComponentsPatch -->
   <string name="morphe_music_hide_flyout_menu_components_screen_title">Meniu flyout</string>
   <string name="morphe_music_hide_flyout_menu_components_screen_summary">Alegeți ce componente apar în meniurile flyout ale playerului și cozii.</string>
@@ -291,6 +297,8 @@ YouTube Music 8.x — estomparea încrucișată funcționează doar pe 9.x și v
   <string name="morphe_music_scrobbling_custom_regex_summary">Introduceți o expresie regulată personalizată pentru a elimina text suplimentar din titlurile, artiștii sau albumele melodiilor. Exemplu: (?i)\\s*\\((clean|explicit)\\)</string>
   <string name="morphe_music_scrobbling_parse_title_title">Analizeazã artistul în titlu</string>
   <string name="morphe_music_scrobbling_parse_title_summary">Extrage numele artistului și al piesei din titlul videoclipului folosind separatorul \" - \". Util pentru conținut reîncărcat unde numele canalului poate fi utilizat ca artist.</string>
+  <string name="morphe_music_scrobbling_guess_album_title">Completează albumul lipsă</string>
+  <string name="morphe_music_scrobbling_guess_album_summary">Când melodia nu include un album, caută-l pe Last.fm, pentru ca scrobble-ul tău să fie complet.</string>
   <!-- 'scrobbling' must be kept untranslated -->
   <string name="morphe_music_scrobbling_about_title">Despre scrobbling</string>
   <!-- 'scrobbling' must be kept untranslated -->

@@ -12,7 +12,6 @@ package app.morphe.extension.youtube.patches.components;
 
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.support.v7.widget.RecyclerView;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
@@ -63,6 +62,8 @@ public final class LayoutComponentsFilter extends Filter {
 
     private final StringFilterGroup channelProfile;
     private final StringFilterGroupList channelProfileGroupList = new StringFilterGroupList();
+    private final StringFilterGroup channelFilterBar;
+    private final StringFilterGroup channelMembersOnlyChipId;
     private final StringFilterGroup chipBar;
     private final StringFilterGroup communityPosts;
     private final StringFilterGroup compactChannelBarInner;
@@ -169,6 +170,16 @@ public final class LayoutComponentsFilter extends Filter {
                 "multi_feed_icon_button"
         );
 
+        channelFilterBar = new StringFilterGroup(
+                null,
+                "channels_chip_bar.e"
+        );
+
+        channelMembersOnlyChipId = new StringFilterGroup(
+                null,
+                "id.chip.EhAKDgoD6gEACgcaBQoDggEA"
+        );
+
         final var channelLinksPreview = new StringFilterGroup(
                 Settings.HIDE_LINKS_PREVIEW,
                 "attribution.e"
@@ -241,6 +252,7 @@ public final class LayoutComponentsFilter extends Filter {
 
         communityPosts = new StringFilterGroup(
                 Settings.HIDE_COMMUNITY_POSTS,
+                "images_post_responsive_root.e",
                 "images_post_root.e",
                 "images_post_root_slim.e",
                 "images_post_slim.e", // may be obsolete and no longer needed.
@@ -415,6 +427,7 @@ public final class LayoutComponentsFilter extends Filter {
         addPathCallbacks(
                 artistCard,
                 audioTrackButton,
+                channelFilterBar,
                 channelLinksPreview,
                 channelMembersShelf,
                 channelProfile,
@@ -473,6 +486,18 @@ public final class LayoutComponentsFilter extends Filter {
 
         // Exceptions are not filtered.
         if (exceptions.matches(path)) {
+            return false;
+        }
+
+        if (matchedGroup == channelFilterBar) {
+            if (Settings.HIDE_FILTER_BAR_IN_CHANNEL_PAGE.get()) {
+                return true;
+            }
+
+            if (Settings.HIDE_MEMBERS_ONLY_CHIP.get()) {
+                return channelMembersOnlyChipId.check(accessibility).isFiltered();
+            }
+
             return false;
         }
 
@@ -571,6 +596,16 @@ public final class LayoutComponentsFilter extends Filter {
 
     /**
      * Injection point.
+     */
+    public static boolean disableUIPaddingFeatureFlags(boolean original) {
+        if (Settings.HIDE_COMPACT_BANNER.get()) {
+            return false;
+        }
+        return original;
+    }
+
+    /**
+     * Injection point.
      * Called from a different place then the other filters.
      */
     public static boolean filterMixPlaylists(@Nullable byte[] buffer) {
@@ -649,20 +684,19 @@ public final class LayoutComponentsFilter extends Filter {
                 : height;
     }
 
-    private static final boolean HIDE_FILTER_BAR_IN_RELATED_VIDEOS_ENABLED
-            = Settings.HIDE_FILTER_BAR_IN_RELATED_VIDEOS.get();
+    /**
+     * Injection point.
+     */
+    public static boolean hideInRelatedVideos(boolean original) {
+        return !Settings.HIDE_FILTER_BAR_IN_RELATED_VIDEOS.get() && original;
+    }
 
     /**
      * Injection point.
      */
-    public static void hideInRelatedVideos(@Nullable RecyclerView chipRecyclerView) {
-        if (chipRecyclerView == null) {
-            return;
-        }
-
-        if (HIDE_FILTER_BAR_IN_RELATED_VIDEOS_ENABLED) {
-            chipRecyclerView.setVisibility(RecyclerView.GONE);
-        }
+    public static void hideInRelatedVideos(@Nullable View view) {
+        if (view == null) return;
+        Utils.hideViewUnderCondition(Settings.HIDE_FILTER_BAR_IN_RELATED_VIDEOS.get(), view);
     }
 
     private static final boolean HIDE_YOUTUBE_DOODLES_ENABLED = Settings.HIDE_YOUTUBE_DOODLES.get();

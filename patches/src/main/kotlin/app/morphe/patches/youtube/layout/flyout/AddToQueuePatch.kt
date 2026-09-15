@@ -18,18 +18,23 @@ import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.string
 import app.morphe.patcher.util.proxy.mutableTypes.MutableMethod.Companion.toMutable
 import app.morphe.patches.shared.misc.litho.filter.addLithoFilter
+import app.morphe.patches.shared.misc.proto.hookElement
 import app.morphe.patches.shared.misc.settings.preference.SwitchPreference
 import app.morphe.patches.shared.misc.settings.preference.noTitleUnsortedPreferenceCategory
 import app.morphe.patches.youtube.layout.hide.general.ContextualMenuItemBuilderFingerprint
 import app.morphe.patches.youtube.layout.hide.general.ContextualMenuItemBuilderOnClickFingerprint
+import app.morphe.patches.youtube.layout.hide.general.hideLayoutComponentsPatch
+import app.morphe.patches.youtube.layout.hide.player.flyoutmenu.hidePlayerFlyoutMenuComponentsPatch
 import app.morphe.patches.youtube.misc.auth.authHookPatch
 import app.morphe.patches.youtube.misc.extension.sharedExtensionPatch
 import app.morphe.patches.youtube.misc.litho.filter.lithoFilterPatch
 import app.morphe.patches.youtube.misc.playservice.is_21_05_or_greater
 import app.morphe.patches.youtube.misc.playservice.versionCheckPatch
+import app.morphe.patches.youtube.misc.proto.elementProtoParserHookPatch
 import app.morphe.patches.youtube.misc.settings.PreferenceScreen
 import app.morphe.patches.youtube.misc.settings.settingsPatch
 import app.morphe.patches.youtube.shared.Constants.COMPATIBILITY_YOUTUBE
+import app.morphe.patches.youtube.shared.StartVideoInformerFingerprint
 import app.morphe.patches.youtube.video.information.videoInformationPatch
 import app.morphe.util.cloneParameters
 import app.morphe.util.findFreeRegister
@@ -74,8 +79,11 @@ val addToQueuePatch = bytecodePatch(
         sharedExtensionPatch,
         settingsPatch,
         lithoFilterPatch,
+        hideLayoutComponentsPatch,
+        hidePlayerFlyoutMenuComponentsPatch,
         versionCheckPatch,
         videoInformationPatch,
+        elementProtoParserHookPatch,
         authHookPatch
     )
 
@@ -85,7 +93,9 @@ val addToQueuePatch = bytecodePatch(
         PreferenceScreen.FEED.addPreferences(
             noTitleUnsortedPreferenceCategory(
                 SwitchPreference("morphe_queue_override_flyout_menu", summary = true),
-                SwitchPreference("morphe_queue_add_flyout_menu", summary = true)
+                SwitchPreference("morphe_queue_add_flyout_menu", summary = true),
+                SwitchPreference("morphe_ads_channel_whitelist_flyout_menu", summary = true),
+                SwitchPreference("morphe_playback_speed_channel_whitelist_flyout_menu", summary = true)
             )
         )
 
@@ -337,5 +347,10 @@ val addToQueuePatch = bytecodePatch(
         }
 
         addLithoFilter(EXTENSION_FILTER)
+        hookElement("$EXTENSION_UTILS_CLASS->onNewElementsLoaded")
+        StartVideoInformerFingerprint.method.addInstruction(
+            0,
+            "invoke-static { }, $EXTENSION_UTILS_CLASS->setVideoMarkedAsForKids()V"
+        )
     }
 }

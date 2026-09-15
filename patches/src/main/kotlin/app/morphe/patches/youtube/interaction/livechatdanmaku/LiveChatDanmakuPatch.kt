@@ -6,9 +6,9 @@ import app.morphe.patches.shared.misc.settings.preference.TextPreference
 import app.morphe.patches.shared.misc.settings.preference.noTitleUnsortedPreferenceCategory
 import app.morphe.patches.youtube.layout.player.buttons.addPlayerBottomButton
 import app.morphe.patches.youtube.layout.player.buttons.playerOverlayButtonsHookPatch
-import app.morphe.patches.youtube.misc.request.buildRequestPatch
-import app.morphe.patches.youtube.misc.request.hookBuildRequest
-import app.morphe.patches.youtube.misc.request.hookBuildRequestWithBody
+import app.morphe.patches.shared.misc.request.buildRequestPatch
+import app.morphe.patches.shared.misc.request.hookBuildRequest
+import app.morphe.patches.shared.misc.request.hookBuildRequestWithBody
 import app.morphe.patches.youtube.misc.playertype.playerTypeHookPatch
 import app.morphe.patches.youtube.misc.settings.PreferenceScreen
 import app.morphe.patches.youtube.misc.settings.settingsPatch
@@ -45,8 +45,8 @@ val liveChatDanmakuPatch = bytecodePatch(
         )
 
         hookVideoId("$EXTENSION_CLASS->newVideoLoaded(Ljava/lang/String;)V")
-        hookBuildRequestWithBody("$EXTENSION_CLASS->setRequestBody(Ljava/lang/String;[B)V")
-        hookBuildRequest("$EXTENSION_CLASS->setRequestHeaders(Ljava/lang/String;Ljava/util/Map;)V")
+        hookBuildRequestWithBody("$EXTENSION_CLASS->setRequestBody")
+        hookBuildRequest("$EXTENSION_CLASS->setRequestHeaders")
         addPlayerBottomButton(EXTENSION_CLASS)
     }
 }

@@ -27,7 +27,6 @@ import app.morphe.patches.youtube.shared.PlaybackSpeedOnItemClickParentFingerpri
 import app.morphe.patches.youtube.shared.VideoQualityChangedFingerprint
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
-import com.sun.tools.javac.main.Option
 
 internal object PlaybackSpeedOnItemClickFingerprint : Fingerprint(
     classFingerprint = PlaybackSpeedOnItemClickParentFingerprint,
@@ -74,6 +73,21 @@ internal fun getChannelIdFingerprint(playerResponseType: String) = object : Fing
             string = "com.google.android.apps.youtube.mdx.watch.LAST_MEALBAR_PROMOTED_LIVE_FEED_CHANNELS",
             location = MatchAfterWithin(20)
         )
+    )
+) {}
+
+internal fun getVideoTitleFingerprint(playerResponseType: String) = object : Fingerprint(
+    accessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.STATIC),
+    returnType = "Ljava/lang/String;",
+    parameters = listOf(playerResponseType),
+    filters = listOf(
+        methodCall(
+            definingClass = playerResponseType,
+            returnType = "Ljava/lang/String;"
+        ),
+        opcode(Opcode.MOVE_RESULT_OBJECT, MatchAfterImmediately()),
+        opcode(Opcode.IF_NEZ, MatchAfterImmediately()),
+        string("", location = MatchAfterImmediately())
     )
 ) {}
 
@@ -319,6 +333,17 @@ internal fun getPlaybackParametersSetterFingerprint(playbackParametersType: Stri
         methodDef.implementation != null
             && classDef.interfaces.contains("Landroidx/media3/exoplayer/ExoPlayer;")
     }
+) {}
+
+internal fun getExoPlayerImplFingerprint(playbackParametersType: String) = object : Fingerprint(
+    classFingerprint = getPlaybackParametersSetterFingerprint(playbackParametersType),
+    name = "<init>",
+    filters = listOf(
+        methodCall(
+            opcode = Opcode.INVOKE_DIRECT,
+            name = "<init>"
+        )
+    )
 ) {}
 
 /**

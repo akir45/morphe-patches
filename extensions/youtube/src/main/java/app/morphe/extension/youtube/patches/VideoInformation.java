@@ -29,6 +29,7 @@ import app.morphe.extension.shared.Utils;
 import app.morphe.extension.shared.patches.components.ContextInterface;
 import app.morphe.extension.youtube.patches.voiceovertranslation.VoiceOverTranslationPatch;
 import app.morphe.extension.youtube.shared.Event;
+import app.morphe.extension.youtube.shared.PlayerType;
 import app.morphe.extension.youtube.shared.ShortsPlayerState;
 import app.morphe.extension.youtube.shared.VideoState;
 import app.morphe.extension.youtube.patches.playback.speed.RememberPlaybackSpeedPatch;
@@ -122,6 +123,7 @@ public final class VideoInformation {
     private static WeakReference<ExoPlayerImpl> exoPlayerImplRef = new WeakReference<>(null);
     private static String channelId = "";
     private static String channelName = "";
+    private static String videoTitle = "";
     private static String videoId = "";
     private static long videoLength = 0;
 
@@ -147,6 +149,7 @@ public final class VideoInformation {
      * The current playback audio pitch
      */
     private static float playbackAudioPitch = DEFAULT_PLAYBACK_AUDIO_PITCH;
+    private static boolean playbackAudioPitchNeedsApplying;
     /**
      * The current playback speed in native panel.
      */
@@ -155,6 +158,18 @@ public final class VideoInformation {
      * Fires whenever the playback audio pitch changes.
      */
     public static final Event<Float> onPlaybackAudioPitchChange = new Event<>();
+
+    private static boolean isPatchIncluded() {
+        return false;  // Modified during patching.
+    }
+
+    private static boolean isPlaybackAudioPitchEnabled() {
+        return isPatchIncluded() && Settings.ENABLE_PLAYBACK_AUDIO_PITCH.get();
+    }
+
+    private static boolean isPlaybackAudioPitchLinked() {
+        return isPlaybackAudioPitchEnabled() && !Settings.PLAYBACK_AUDIO_TIME_STRETCHING.get();
+    }
 
     private static int desiredVideoResolution = AUTOMATIC_VIDEO_QUALITY_VALUE;
 
@@ -227,12 +242,23 @@ public final class VideoInformation {
             videoLength = 0;
             channelId = "";
             channelName = "";
-            String videoTitle = "";
+            videoTitle = "";
             // playbackSpeed = DEFAULT_PLAYBACK_SPEED; // Captured at video start, interferes otherwise.
             playbackSpeedFormattedString = "";
             final float audioPitchOverride = RememberPlaybackSpeedPatch.getPlaybackAudioPitchOverride();
-            if (audioPitchOverride > 0.0f && Settings.ENABLE_PLAYBACK_AUDIO_PITCH.get()) {
-                playbackAudioPitch = audioPitchOverride;
+            final PlayerType playerType = PlayerType.getCurrent();
+            final boolean noWatchWhilePlayerActive = playerType.isNoneOrHidden() ||
+                    playerType == PlayerType.INLINE_MINIMAL;
+            final float newPlaybackAudioPitch = audioPitchOverride > 0.0f &&
+                    isPlaybackAudioPitchEnabled() && Settings.PLAYBACK_AUDIO_TIME_STRETCHING.get()
+                    ? audioPitchOverride
+                    : !isPlaybackAudioPitchEnabled() || noWatchWhilePlayerActive
+                            ? DEFAULT_PLAYBACK_AUDIO_PITCH
+                            : playbackAudioPitch;
+            if (playbackAudioPitch != newPlaybackAudioPitch ||
+                    (noWatchWhilePlayerActive && newPlaybackAudioPitch != DEFAULT_PLAYBACK_AUDIO_PITCH)) {
+                playbackAudioPitch = newPlaybackAudioPitch;
+                playbackAudioPitchNeedsApplying = true;
             }
             playbackAudioPitchFormattedString = "";
             desiredVideoResolution = AUTOMATIC_VIDEO_QUALITY_VALUE;
@@ -292,6 +318,19 @@ public final class VideoInformation {
     @NonNull
     public static String getChannelName() {
         return channelName;
+    }
+
+    /**
+     * Injection point.
+     */
+    public static void setVideoTitle(String title) {
+        videoTitle = title != null ? title : "";
+        Logger.printDebug(() -> "Extracted Video Title: " + videoTitle);
+    }
+
+    @NonNull
+    public static String getVideoTitle() {
+        return videoTitle;
     }
 
     /**
@@ -360,31 +399,35 @@ public final class VideoInformation {
 
     /**
      * Records a new playback speed, updates the formatted string, and fires {@link #onPlaybackSpeedChange}.
+     *
+     * @return true if the speed actually changed.
      */
-    private static void updatePlaybackSpeedValue(float speed) {
+    private static boolean updatePlaybackSpeedValue(float speed) {
         if (playbackSpeed == speed) {
-            return;
+            return false;
         }
 
         playbackSpeed = speed;
         Logger.printDebug(() -> "Video speed updated: " + playbackSpeed);
         playbackSpeedFormattedString = formatSpeedStringX(speed);
         Utils.runOnMainThreadNowOrLater(() -> onPlaybackSpeedChange.invoke(speed));
-        if (!Settings.PLAYBACK_AUDIO_TIME_STRETCHING.get()) {
+        if (isPlaybackAudioPitchLinked() || (isPatchIncluded() && !isPlaybackAudioPitchEnabled())) {
             updatePlaybackAudioPitchValue(speed);
         }
-        changePlaybackSpeed(playbackSpeed);
+        return true;
     }
 
     /**
      * Records a new playback audio pitch, updates the formatted string, and fires {@link #onPlaybackAudioPitchChange}.
+     *
+     * @return true if the pitch actually changed.
      */
-    private static void updatePlaybackAudioPitchValue(float pitch) {
-        if (!Settings.ENABLE_PLAYBACK_AUDIO_PITCH.get()) {
+    private static boolean updatePlaybackAudioPitchValue(float pitch) {
+        if (!isPlaybackAudioPitchEnabled()) {
             pitch = 1.0f;
         }
         if (playbackAudioPitch == pitch) {
-            return;
+            return false;
         }
 
         playbackAudioPitch = pitch;
@@ -392,10 +435,10 @@ public final class VideoInformation {
         playbackAudioPitchFormattedString = formatSpeedStringX(pitch);
         final float updatedPitch = pitch;
         Utils.runOnMainThreadNowOrLater(() -> onPlaybackAudioPitchChange.invoke(updatedPitch));
-        if (!Settings.PLAYBACK_AUDIO_TIME_STRETCHING.get()) {
+        if (isPlaybackAudioPitchLinked()) {
             updatePlaybackSpeedValue(pitch);
         }
-        setPlaybackParameters(playbackSpeed, playbackAudioPitch);
+        return true;
     }
 
     /**
@@ -406,6 +449,11 @@ public final class VideoInformation {
         // An exception occurs when the playback speed dialog is opened by an overlay button while 'Restore old playback speed menu' is off.
         // Update the formatted string value to avoid the exception.
         updatePlaybackSpeedValue(currentVideoSpeed);
+        if (playbackAudioPitchNeedsApplying && Settings.PLAYBACK_SPEED_DEFAULT.get() <= 0.0f) {
+            playbackAudioPitchNeedsApplying = false;
+            final float pitch = playbackAudioPitch;
+            Utils.runOnMainThreadNowOrLater(() -> setPlaybackParameters(currentVideoSpeed, pitch));
+        }
     }
 
     /**
@@ -414,7 +462,18 @@ public final class VideoInformation {
      */
     public static void setAudioPitch(float currentAudioPitch) {
         Logger.printDebug(() -> "Audio pitch set to: " + currentAudioPitch);
-        updatePlaybackAudioPitchValue(currentAudioPitch);
+        final float previousPlaybackSpeed = playbackSpeed;
+        if (!updatePlaybackAudioPitchValue(currentAudioPitch)) {
+            return;
+        }
+
+        RememberPlaybackSpeedPatch.userSelectedPlaybackAudioPitch(playbackAudioPitch);
+        if (!Settings.PLAYBACK_AUDIO_TIME_STRETCHING.get() && previousPlaybackSpeed != playbackSpeed) {
+            RememberPlaybackSpeedPatch.userSelectedPlaybackSpeed(playbackSpeed);
+            changePlaybackSpeed(playbackSpeed);
+        } else {
+            setPlaybackParameters(playbackSpeed, playbackAudioPitch);
+        }
     }
 
     /**
@@ -426,6 +485,9 @@ public final class VideoInformation {
     public static void userSelectedPlaybackSpeed(float userSelectedPlaybackSpeed) {
         Logger.printDebug(() -> "User selected playback speed: " + userSelectedPlaybackSpeed);
         updatePlaybackSpeedValue(userSelectedPlaybackSpeed);
+        if (isPlaybackAudioPitchLinked()) {
+            RememberPlaybackSpeedPatch.userSelectedPlaybackAudioPitch(userSelectedPlaybackSpeed);
+        }
 
         // An exception occurs when the playback speed dialog is opened by an overlay button while 'Restore old playback speed menu' is off.
         // Update the formatted string value to avoid the exception.
@@ -759,7 +821,12 @@ public final class VideoInformation {
         Utils.verifyOnMainThread();
 
         if (currentPlaybackSpeedMenuInterface == null) {
-            Logger.printException(() -> "Cannot change speed, menu interface is null");
+            Logger.LogMessage logMessage = () -> "Debug: Cannot change playback speed, menu interface is null";
+            if (Settings.DEBUG.get()) {
+                Logger.printException(logMessage);
+            } else {
+                Logger.printDebug(logMessage);
+            }
             return;
         }
         if (playbackSpeed <= 0 || playbackSpeed > PLAYBACK_SPEED_MAXIMUM) {
@@ -767,7 +834,16 @@ public final class VideoInformation {
             return;
         }
 
+        final boolean playbackSpeedChanged = updatePlaybackSpeedValue(playbackSpeed);
+        if (isPlaybackAudioPitchLinked()) {
+            updatePlaybackAudioPitchValue(playbackSpeed);
+        }
+        final float playbackAudioPitchToApply = playbackAudioPitch;
         currentPlaybackSpeedMenuInterface.patch_setSpeed(playbackSpeed);
+        if (playbackAudioPitchNeedsApplying && !playbackSpeedChanged) {
+            setPlaybackParameters(playbackSpeed, playbackAudioPitchToApply);
+        }
+        playbackAudioPitchNeedsApplying = false;
     }
 
     /**
@@ -791,7 +867,12 @@ public final class VideoInformation {
             exoPlayerImpl.patch_setPlaybackParameters(speed, pitch);
             Logger.printDebug(() -> "Video playbackParameters changed, speed: " + speed + " pitch: " + pitch);
         } else {
-            Logger.printException(() -> "Cannot change speed, menu interface is null");
+            Logger.LogMessage logMessage = () -> "Debug: Cannot change speed parameters, menu interface is null";
+            if (Settings.DEBUG.get()) {
+                Logger.printException(logMessage);
+            } else {
+                Logger.printDebug(logMessage);
+            }
         }
     }
 
@@ -848,7 +929,13 @@ public final class VideoInformation {
         if (!playbackSpeedFormattedString.equals(newlyLoadedPlaybackSpeedFormattedString)) {
             playbackSpeedFormattedString = newlyLoadedPlaybackSpeedFormattedString;
 
+            final float previousPlaybackAudioPitch = playbackAudioPitch;
             VideoInformation.userSelectedPlaybackSpeed(newlyLoadedPlaybackSpeed);
+            if (previousPlaybackAudioPitch != playbackAudioPitch) {
+                final float pitch = playbackAudioPitch;
+                Utils.runOnMainThreadNowOrLater(() ->
+                        setPlaybackParameters(newlyLoadedPlaybackSpeed, pitch));
+            }
 
             // Rest of the implementation added by patch.
             // RememberPlaybackSpeedPatch.userSelectedPlaybackSpeed(newlyLoadedPlaybackSpeed);
@@ -862,7 +949,15 @@ public final class VideoInformation {
      * @param newlyLoadedPlaybackSpeed The current playback speed.
      */
     public static void setPlaybackSpeed(float newlyLoadedPlaybackSpeed) {
-        updatePlaybackSpeedValue(newlyLoadedPlaybackSpeed);
+        if (!updatePlaybackSpeedValue(newlyLoadedPlaybackSpeed)) {
+            return;
+        }
+
+        RememberPlaybackSpeedPatch.userSelectedPlaybackSpeed(playbackSpeed);
+        if (isPlaybackAudioPitchLinked()) {
+            RememberPlaybackSpeedPatch.userSelectedPlaybackAudioPitch(playbackAudioPitch);
+        }
+        changePlaybackSpeed(playbackSpeed);
     }
 
     /**
@@ -974,15 +1069,23 @@ public final class VideoInformation {
                             : "Video is already the preferred quality: " + quality
                     );
 
-                    // On first load of a new regular video, if the video is already the
-                    // desired quality then the quality flyout will show 'Auto' (ie: Auto (720p)).
+                    // On first load of a new regular video, if the video is already the desired
+                    // quality then the quality flyout will show 'Auto' (ie: Auto (720p)).
                     //
-                    // To prevent user confusion, set the video index even if the
-                    // quality is already correct so the UI picker will not display "Auto".
+                    // To prevent user confusion, set the video index even if the quality is already
+                    // correct so the UI picker will not display "Auto".
                     //
-                    // Only change Shorts quality if the quality actually needs to change,
-                    // because the "auto" option is not shown in the flyout
-                    // and setting the same quality again can cause the Short to restart.
+                    // Only change Shorts quality if the quality actually needs to change, because
+                    // the "Auto" option is not shown in the flyout and setting the same quality
+                    // again can cause the Short to restart.
+                    //
+                    // If a regular video is opened via a link inside a Short, the Shorts UI fragment
+                    // remains open during the transition. Forcing a changeQuality() restart during
+                    // this specific overlapping state causes an ExoPlayer codec deadlock.
+                    if (ShortsPlayerState.isOpen() && !PlayerType.getCurrent().isNoneOrHidden()) {
+                        return i;
+                    }
+
                     if (qualityNeedsChange || !ShortsPlayerState.isOpen()) {
                         changeQuality(quality);
                         return i;

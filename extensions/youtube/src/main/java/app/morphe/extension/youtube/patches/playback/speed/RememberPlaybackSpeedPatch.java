@@ -19,6 +19,8 @@ import app.morphe.extension.shared.Utils;
 import app.morphe.extension.youtube.patches.VideoInformation;
 import app.morphe.extension.youtube.patches.utils.requests.GetMixPlaylistRequest;
 import app.morphe.extension.youtube.settings.Settings;
+import app.morphe.extension.youtube.whitelist.ChannelWhitelist;
+import app.morphe.extension.youtube.whitelist.WhitelistType;
 
 @SuppressWarnings("unused")
 public final class RememberPlaybackSpeedPatch {
@@ -31,7 +33,11 @@ public final class RememberPlaybackSpeedPatch {
 
     private static volatile boolean newVideoStarted;
 
-    private static volatile boolean newAudioStarted; // Actually video, just a flag for audio pitch
+    private static volatile boolean newAudioStarted = true; // Actually video, just a flag for audio pitch
+
+    private static float reloadPlaybackSpeed = -2.0f;
+
+    private static float reloadPlaybackAudioPitch = -2.0f;
 
     private static long lastTimeSpeedChanged;
 
@@ -44,6 +50,11 @@ public final class RememberPlaybackSpeedPatch {
         Logger.printDebug(() -> "newVideoStarted");
         newVideoStarted = true;
         newAudioStarted = true;
+    }
+
+    public static void preservePlaybackParametersForReload() {
+        reloadPlaybackSpeed = VideoInformation.getPlaybackSpeed();
+        reloadPlaybackAudioPitch = VideoInformation.getPlaybackAudioPitch();
     }
 
     /**
@@ -144,14 +155,23 @@ public final class RememberPlaybackSpeedPatch {
 
             VideoInformation.setPlaybackSpeedMenu(menu);
 
-            float defaultSpeed = Settings.PLAYBACK_SPEED_DEFAULT.get();
-            if (DISABLE_PLAYBACK_SPEED_MUSIC && defaultSpeed != 1.0f) {
-                String videoId = VideoInformation.getVideoId();
-                GetMixPlaylistRequest request = GetMixPlaylistRequest.getRequestForVideoId(videoId);
-                final boolean isMusic = request != null && Boolean.TRUE.equals(request.getResult());
-                if (isMusic) {
-                    Logger.printDebug(() -> "Overriding music video speed to 1.0x: " + videoId);
+            final boolean useReloadPlaybackSpeed = reloadPlaybackSpeed > 0;
+            float defaultSpeed = useReloadPlaybackSpeed
+                    ? reloadPlaybackSpeed
+                    : Settings.PLAYBACK_SPEED_DEFAULT.get();
+            reloadPlaybackSpeed = -2.0f;
+            if (!useReloadPlaybackSpeed && defaultSpeed != 1.0f) {
+                if (ChannelWhitelist.isCurrentChannelWhitelisted(WhitelistType.PLAYBACK_SPEED)) {
+                    Logger.printDebug(() -> "Overriding whitelisted channel video speed to 1.0x");
                     defaultSpeed = 1.0f;
+                } else if (DISABLE_PLAYBACK_SPEED_MUSIC) {
+                    String videoId = VideoInformation.getVideoId();
+                    GetMixPlaylistRequest request = GetMixPlaylistRequest.getRequestForVideoId(videoId);
+                    final boolean isMusic = request != null && Boolean.TRUE.equals(request.getResult());
+                    if (isMusic) {
+                        Logger.printDebug(() -> "Overriding music video speed to 1.0x: " + videoId);
+                        defaultSpeed = 1.0f;
+                    }
                 }
             }
 
@@ -168,16 +188,26 @@ public final class RememberPlaybackSpeedPatch {
         if (newAudioStarted) {
             newAudioStarted = false;
             
-            final float defaultAudioPitch = Settings.PLAYBACK_AUDIO_PITCH_DEFAULT.get();
-            if (DISABLE_PLAYBACK_SPEED_MUSIC && defaultAudioPitch != 1.0f) {
-                String videoId = VideoInformation.getVideoId();
-
-                // duplicate request, needs refactor along with getPlaybackSpeedOverride
-                GetMixPlaylistRequest request = GetMixPlaylistRequest.getRequestForVideoId(videoId);
-                final boolean isMusic = request != null && Boolean.TRUE.equals(request.getResult());
-                if (isMusic) {
-                    Logger.printDebug(() -> "Overriding music audio pitch to 1.0x: " + videoId);
+            final boolean useReloadAudioPitch = reloadPlaybackAudioPitch > 0;
+            final float defaultAudioPitch = useReloadAudioPitch
+                    ? reloadPlaybackAudioPitch
+                    : Settings.PLAYBACK_AUDIO_PITCH_DEFAULT.get();
+            reloadPlaybackAudioPitch = -2.0f;
+            if (!useReloadAudioPitch && defaultAudioPitch != 1.0f) {
+                if (ChannelWhitelist.isCurrentChannelWhitelisted(WhitelistType.PLAYBACK_SPEED)) {
+                    Logger.printDebug(() -> "Overriding whitelisted channel audio pitch to 1.0x");
                     return 1.0f;
+                }
+                if (DISABLE_PLAYBACK_SPEED_MUSIC) {
+                    String videoId = VideoInformation.getVideoId();
+
+                    // duplicate request, needs refactor along with getPlaybackSpeedOverride
+                    GetMixPlaylistRequest request = GetMixPlaylistRequest.getRequestForVideoId(videoId);
+                    final boolean isMusic = request != null && Boolean.TRUE.equals(request.getResult());
+                    if (isMusic) {
+                        Logger.printDebug(() -> "Overriding music audio pitch to 1.0x: " + videoId);
+                        return 1.0f;
+                    }
                 }
             }
 

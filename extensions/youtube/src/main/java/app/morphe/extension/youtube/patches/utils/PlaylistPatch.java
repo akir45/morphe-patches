@@ -11,9 +11,8 @@ import static app.morphe.extension.shared.StringRef.str;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
@@ -36,6 +35,7 @@ import app.morphe.extension.shared.ResourceType;
 import app.morphe.extension.shared.ResourceUtils;
 import app.morphe.extension.shared.Utils;
 import app.morphe.extension.shared.innertube.utils.AuthUtils;
+import app.morphe.extension.shared.theme.ThemeUtils;
 import app.morphe.extension.shared.ui.Dim;
 import app.morphe.extension.shared.ui.SheetBottomDialog;
 import app.morphe.extension.youtube.patches.LoadVideoPatch;
@@ -168,16 +168,15 @@ public class PlaylistPatch {
         row.setClickable(true);
         row.setFocusable(true);
 
-        int[] attrs = {android.R.attr.selectableItemBackground};
-        Drawable ripple;
-        try (TypedArray typedArray = context.obtainStyledAttributes(attrs)) {
-            ripple = typedArray.getDrawable(0);
+        TypedValue ripple = new TypedValue();
+        if (context.getTheme().resolveAttribute(
+                android.R.attr.selectableItemBackground, ripple, true)) {
+            row.setBackgroundResource(ripple.resourceId);
         }
-        row.setBackground(ripple);
 
         ImageView icon = new ImageView(context);
         icon.setImageResource(iconId);
-        icon.setColorFilter(Utils.getAppForegroundColor());
+        icon.setColorFilter(ThemeUtils.getAppForegroundColor());
         LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(Dim.dp24, Dim.dp24);
         iconParams.setMarginEnd(Dim.dp16);
         icon.setLayoutParams(iconParams);
@@ -185,8 +184,8 @@ public class PlaylistPatch {
 
         TextView text = new TextView(context);
         text.setText(title);
-        text.setTextColor(Utils.getAppForegroundColor());
-        text.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 16);
+        text.setTextColor(ThemeUtils.getAppForegroundColor());
+        text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
         LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         text.setLayoutParams(textParams);

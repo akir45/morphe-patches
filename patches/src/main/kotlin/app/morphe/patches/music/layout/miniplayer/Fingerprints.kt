@@ -16,8 +16,8 @@ import app.morphe.patcher.literal
 import app.morphe.patcher.methodCall
 import app.morphe.patcher.opcode
 import app.morphe.patcher.string
-import app.morphe.patches.all.misc.resources.ResourceType
-import app.morphe.patches.all.misc.resources.resourceLiteral
+import app.morphe.patcher.resource.ResourceType
+import app.morphe.patcher.resourceLiteral
 import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
 
@@ -185,19 +185,6 @@ internal object MiniPlayerDefaultTextFingerprint : Fingerprint(
     parameters = listOf(),
     returnType = "V",
     filters = listOf(
-        resourceLiteral(ResourceType.STRING, "mini_player_default_text")
-    )
-)
-
-/**
- * 9.02 and lower.
- */
-internal object MiniPlayerDefaultTextLegacyFingerprint : Fingerprint(
-    accessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.FINAL),
-    parameters = listOf("Ljava/lang/Object;"),
-    returnType = "V",
-    filters = listOf(
-        opcode(Opcode.IF_NE),
         resourceLiteral(ResourceType.STRING, "mini_player_default_text")
     )
 )

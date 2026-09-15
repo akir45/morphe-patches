@@ -1,3 +1,13 @@
+/*
+ * Copyright 2026 Morphe.
+ * https://github.com/MorpheApp/morphe-patches
+ *
+ * Original hard forked code:
+ * https://github.com/ReVanced/revanced-patches/commit/724e6d61b2ecd868c1a9a37d465a688e83a74799
+ *
+ * See the included NOTICE file for GPLv3 Section 7 terms that apply to Morphe contributions.
+ */
+
 package app.morphe.extension.youtube.swipecontrols
 
 import android.app.Activity
@@ -192,6 +202,16 @@ class SwipeControlsHostActivity : Activity() {
         contentRoot.addView(overlay)
     }
 
+    /**
+     * If the app shares the screen with another app, which the player of a fold device is used
+     * with the same way it is used in fullscreen.
+     *
+     * Picture in picture is a multi window mode as well and is not one of these. The window of
+     * the app is pinned then, and the player it returns to is the maximized one.
+     */
+    val isInSplitScreenMode: Boolean
+        get() = isInMultiWindowMode && !isInPictureInPictureMode
+
     // Flag that indicates whether the brightness has been saved and restored default brightness
     private var isBrightnessSaved = false
 
@@ -202,9 +222,10 @@ class SwipeControlsHostActivity : Activity() {
      */
     private fun onPlayerTypeChanged(type: PlayerType) {
         when {
-            // If saving and restoring brightness is enabled, and the player type is WATCH_WHILE_FULLSCREEN,
+            // If saving and restoring brightness is enabled, and the player type is fullscreen or multi-window,
             // and brightness has already been saved, then restore the screen brightness
-            config.shouldSaveAndRestoreBrightness && type == PlayerType.WATCH_WHILE_FULLSCREEN && isBrightnessSaved -> {
+            config.shouldSaveAndRestoreBrightness && (type == PlayerType.WATCH_WHILE_FULLSCREEN ||
+                    (isInSplitScreenMode && type == PlayerType.WATCH_WHILE_MAXIMIZED)) && isBrightnessSaved -> {
                 screen?.restore()
                 isBrightnessSaved = false
             }
@@ -225,7 +246,7 @@ class SwipeControlsHostActivity : Activity() {
      */
     private fun createAudioController() =
         if (config.enableVolumeControls) {
-            AudioVolumeController(this)
+            AudioVolumeController(this).takeIf { it.isAvailable }
         } else {
             null
         }

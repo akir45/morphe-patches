@@ -10,13 +10,11 @@
 
 package app.morphe.patches.youtube.video.information
 
-import app.morphe.patcher.Fingerprint
 import app.morphe.patcher.extensions.InstructionExtensions.addInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import app.morphe.patcher.extensions.InstructionExtensions.getInstruction
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
-import app.morphe.patcher.methodCall
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.util.proxy.mutableTypes.MutableClass
@@ -32,6 +30,7 @@ import app.morphe.patches.youtube.misc.addon.EXTENSION_ADD_ON_API_CLASS_DESCRIPT
 import app.morphe.patches.youtube.misc.extension.sharedExtensionPatch
 import app.morphe.patches.youtube.misc.litho.context.conversionContextPatch
 import app.morphe.patches.youtube.misc.playertype.playerTypeHookPatch
+import app.morphe.patches.youtube.misc.playservice.is_21_29_or_greater
 import app.morphe.patches.youtube.misc.playservice.versionCheckPatch
 import app.morphe.patches.youtube.shared.InitializePlaybackSpeedValuesFingerprint
 import app.morphe.patches.youtube.shared.SpeedLimiterFingerprint
@@ -502,6 +501,19 @@ val videoInformationPatch = bytecodePatch(
             val channelNameMethodCall = getChannelNameFingerprint(playerResponseType).instructionMatches.last()
                 .instruction.getReference<MethodReference>()!!
 
+            // The helper this resolves through only exists in later targets, and the title is
+            // only used by the minimal miniplayer, which is only rebuilt for those.
+            val videoTitleInstructions = if (is_21_29_or_greater) {
+                val videoTitleMethodCall = getVideoTitleFingerprint(playerResponseType)
+                    .instructionMatches.first().instruction.getReference<MethodReference>()!!
+
+                """
+                    invoke-interface { p1 }, $videoTitleMethodCall
+                    move-result-object v0
+                    invoke-static { v0 }, $EXTENSION_CLASS->setVideoTitle(Ljava/lang/String;)V
+                """
+            } else ""
+
             it.classDef.apply {
                 val helperMethod = ImmutableMethod(
                     type,
@@ -527,7 +539,9 @@ val videoInformationPatch = bytecodePatch(
                             invoke-interface { p1 }, $channelNameMethodCall
                             move-result-object v0
                             invoke-static { v0 }, $EXTENSION_CLASS->setChannelName(Ljava/lang/String;)V
-                            
+
+                            $videoTitleInstructions
+
                             return-void
                         """.toInstructions(),
                         null,
@@ -581,16 +595,7 @@ val videoInformationPatch = bytecodePatch(
         // Capture the ExoPlayerImpl reference at its init constructor (only 1 yet)
         // Extension is initialized (Application.onCreate) before starting to play any video.
         // This is required for patch_setPlaybackParameters function.
-        Fingerprint(
-            classFingerprint = setPlaybackParametersFingerprint,
-            name = "<init>",
-            filters = listOf(
-                methodCall(
-                    opcode = Opcode.INVOKE_DIRECT,
-                    name = "<init>"
-                )
-            )
-        ).matchAll().forEach {
+        getExoPlayerImplFingerprint(playbackParametersType).matchAll().forEach {
             val firstInstructionMatch = it.instructionMatches.first()
             val register = firstInstructionMatch.getInstruction<FiveRegisterInstruction>().registerC
             it.method.addInstruction(
@@ -606,31 +611,31 @@ val videoInformationPatch = bytecodePatch(
             interfaces.add(EXTENSION_EXOPLAYERIMPL_INTERFACE)
 
             methods.add(
-                    ImmutableMethod(
-                        type,
-                        "patch_setPlaybackParameters",
-                        listOf(
-                            ImmutableMethodParameter("F", null, null),
-                            ImmutableMethodParameter("F", null, null)
-                        ),
-                        "V",
-                        AccessFlags.PUBLIC.value or AccessFlags.FINAL.value,
-                        null,
-                        null,
-                        MutableMethodImplementation(4),
-                    ).toMutable().apply {
-                        addInstructions(
-                            0,
-                            """
-                                new-instance v0, $playbackParametersType
-                                invoke-direct { v0, p1, p2 }, $playbackParametersConstructorReference
-                                invoke-virtual { p0, v0 }, $setPlaybackParametersReference
-                                return-void
-                            """
-                        )
-                    }
-                )
-            }
+                ImmutableMethod(
+                    type,
+                    "patch_setPlaybackParameters",
+                    listOf(
+                        ImmutableMethodParameter("F", null, null),
+                        ImmutableMethodParameter("F", null, null)
+                    ),
+                    "V",
+                    AccessFlags.PUBLIC.value or AccessFlags.FINAL.value,
+                    null,
+                    null,
+                    MutableMethodImplementation(4),
+                ).toMutable().apply {
+                    addInstructions(
+                        0,
+                        """
+                            new-instance v0, $playbackParametersType
+                            invoke-direct { v0, p1, p2 }, $playbackParametersConstructorReference
+                            invoke-virtual { p0, v0 }, $setPlaybackParametersReference
+                            return-void
+                        """
+                    )
+                }
+            )
+        }
 
         // endregion.
 

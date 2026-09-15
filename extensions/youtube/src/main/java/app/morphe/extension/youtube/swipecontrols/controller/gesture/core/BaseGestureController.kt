@@ -36,9 +36,8 @@ abstract class BaseGestureController(
         controller.audio,
         controller.screen,
         controller.overlay,
-        10,
+        controller.config.volumeSwipeDistance,
         controller.config.brightnessSwipeSensitivity,
-        controller.config.volumeSwipeSensitivity,
         controller.config.speedSwipeSensitivity,
         controller.config.speedStepInt,
         controller.config.enableSpeedGestureControl,
@@ -61,8 +60,8 @@ abstract class BaseGestureController(
             return false
         }
 
-        // Ignore if status bar is visible.
-        if (controller.statusBarVisible) {
+        // Ignore if status bar is visible (unless the screen is shared with another app).
+        if (controller.statusBarVisible && !controller.isInSplitScreenMode) {
             return false
         }
 

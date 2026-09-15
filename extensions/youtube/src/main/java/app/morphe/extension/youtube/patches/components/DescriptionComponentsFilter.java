@@ -30,8 +30,8 @@ public final class DescriptionComponentsFilter extends Filter {
     private final StringFilterGroup featuredSection;
     private final ByteArrayFilterGroupList featuredSectionGroupList = new ByteArrayFilterGroupList();
     private final StringFilterGroup hashtagSection;
-    private final ByteArrayFilterGroup hashtagSectionBuffer;
-    private final ByteArrayFilterGroup hypePointsBuffer;
+    private final ByteArrayFilterGroupList hashtagSectionGroupList = new ByteArrayFilterGroupList();
+    private final StringFilterGroup linksSection;
     private final StringFilterGroup macroMarkersCarousel;
     private final ByteArrayFilterGroupList macroMarkersCarouselGroupList = new ByteArrayFilterGroupList();
     private final StringFilterGroup playlistSection;
@@ -92,16 +92,22 @@ public final class DescriptionComponentsFilter extends Filter {
                 "|CellType|ScrollableContainerType|"
         );
 
-        hashtagSectionBuffer = new ByteArrayFilterGroup(
-                Settings.HIDE_HASHTAG_SECTION,
-                "FEhashtag",
-                "/charts" // https://charts.youtube.com/charts/
-        );
-
-        hypePointsBuffer = new ByteArrayFilterGroup(
-                Settings.HIDE_HYPE_POINTS,
-                "yt_outline_star_shooting",
-                "yt_fill_experimental_hype"
+        hashtagSectionGroupList.addAll(
+                new ByteArrayFilterGroup(
+                        Settings.HIDE_ATTRIBUTES_SECTION,
+                        "yt_outline_location_point",
+                        "yt_outline_experimental_location_pin"
+                ),
+                new ByteArrayFilterGroup(
+                        Settings.HIDE_HASHTAG_SECTION,
+                        "FEhashtag",
+                        "/charts" // https://charts.youtube.com/charts/
+                ),
+                new ByteArrayFilterGroup(
+                        Settings.HIDE_HYPE_POINTS,
+                        "yt_outline_star_shooting",
+                        "yt_fill_experimental_hype"
+                )
         );
 
         final StringFilterGroup howThisWasMadeSection = new StringFilterGroup(
@@ -122,6 +128,11 @@ public final class DescriptionComponentsFilter extends Filter {
         final StringFilterGroup lensSection = new StringFilterGroup(
                 Settings.HIDE_SEARCH_INSIDE_THIS_VIDEO_SECTION,
                 "lens_section.e"
+        );
+
+        linksSection = new StringFilterGroup(
+                Settings.HIDE_CHANNEL_LINKS_SECTION,
+                "|ContainerType|ScrollableContainerType|"
         );
 
         macroMarkersCarousel = new StringFilterGroup(
@@ -200,6 +211,7 @@ public final class DescriptionComponentsFilter extends Filter {
                 hypePoints,
                 infoCardsSection,
                 lensSection,
+                linksSection,
                 macroMarkersCarousel,
                 playlistSection,
                 shortsHowThisWasMadeSection,
@@ -231,7 +243,11 @@ public final class DescriptionComponentsFilter extends Filter {
         }
 
         if (matchedGroup == hashtagSection) {
-            return hashtagSectionBuffer.check(buffer).isFiltered() || hypePointsBuffer.check(buffer).isFiltered();
+            return hashtagSectionGroupList.check(buffer).isFiltered();
+        }
+
+        if (matchedGroup == linksSection) {
+            return path.startsWith(INFOCARDS_SECTION_PATH) && path.contains("button.e");
         }
 
         if (matchedGroup == macroMarkersCarousel) {

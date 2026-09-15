@@ -63,6 +63,7 @@ public enum ClientType {
             false,
             false,
             false,
+            false,
             "Android Music No SDK"
     ),
     /**
@@ -163,7 +164,7 @@ public enum ClientType {
             "Android XR Downgraded"
     ),
     /**
-     * Video not playable: Livestream.
+     * Video not playable: Live stream.
      * AV1 codec and HDR codec are not available, and the maximum resolution is 720p.
      */
     // https://dumps.tadiphone.dev/dumps/google/mustang
@@ -207,12 +208,13 @@ public enum ClientType {
             true,
             false,
             true,
+            false,
             true,
             "TV"
     ),
     /**
      * Same as {@code TV_SABR} but supports dash streams.
-     * This client cannot be selected in the settings and is used only for livestreams.
+     * This client cannot be selected in the settings and is used only for live streams.
      */
     TV_DASH(
             TV_SABR.id,
@@ -229,6 +231,7 @@ public enum ClientType {
             TV_SABR.supportsMultiAudioTracks,
             TV_SABR.supportsVRImmersiveMode,
             TV_SABR.requireJS,
+            TV_SABR.requirePoToken,
             false,
             "TV Downgraded"
     ),
@@ -248,11 +251,11 @@ public enum ClientType {
             TV_SABR.userAgent,
             true,
             // This client requires a PoToken for logout.
-            // Use as a login-only client.
-            true,
+            false,
             TV_SABR.supportsMultiAudioTracks,
             TV_SABR.supportsVRImmersiveMode,
             TV_SABR.requireJS,
+            true,
             false,
             "TV Simply"
     ),
@@ -267,14 +270,15 @@ public enum ClientType {
             "Apple",
             "RealityDevice17,1",
             "visionOS",
-            "26.5.23O471",
+            "26.6.1",
             "1.03",
             null,
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15",
+            "com.google.visionosyoutube/1.03 (RealityDevice17,1; U; CPU visionOS 26_6_1 like Mac OS X; en_US) gzip",
             false,
             false,
             true,
             true,
+            false,
             false,
             false,
             "visionOS 1.03"
@@ -290,15 +294,16 @@ public enum ClientType {
             VISIONOS_1_03.deviceMake,
             "RealityDevice14,1",
             VISIONOS_1_03.osName,
-            "2.6.22O785",
+            VISIONOS_1_03.osVersion,
             "1.02",
             VISIONOS_1_03.clientPlatform,
-            VISIONOS_1_03.userAgent,
+            "com.google.visionosyoutube/1.02 (RealityDevice14,1; U; CPU visionOS 26_6_1 like Mac OS X; en_US) gzip",
             VISIONOS_1_03.canLogin,
             VISIONOS_1_03.requireLogin,
             VISIONOS_1_03.supportsMultiAudioTracks,
             VISIONOS_1_03.supportsVRImmersiveMode,
             VISIONOS_1_03.requireJS,
+            VISIONOS_1_03.requirePoToken,
             VISIONOS_1_03.requireSABR,
             "visionOS 1.02"
     );
@@ -397,6 +402,11 @@ public enum ClientType {
     public final boolean requireJS;
 
     /**
+     * If the client requires PoToken.
+     */
+    public final boolean requirePoToken;
+
+    /**
      * If the client require SABR.
      */
     public final boolean requireSABR;
@@ -466,6 +476,7 @@ public enum ClientType {
         Logger.printDebug(() -> "userAgent: " + this.userAgent);
 
         requireJS = false;
+        requirePoToken = false;
     }
 
     ClientType(int id,
@@ -482,6 +493,7 @@ public enum ClientType {
                boolean supportsMultiAudioTracks,
                boolean supportsVRImmersiveMode,
                boolean requireJS,
+               boolean requirePoToken,
                boolean requireSABR,
                String friendlyName) {
         this.id = id;
@@ -498,6 +510,7 @@ public enum ClientType {
         this.supportsMultiAudioTracks = supportsMultiAudioTracks;
         this.supportsVRImmersiveMode = supportsVRImmersiveMode;
         this.requireJS = requireJS;
+        this.requirePoToken = requirePoToken;
         this.requireSABR = requireSABR;
         this.friendlyName = friendlyName;
 
