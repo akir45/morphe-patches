@@ -170,7 +170,7 @@ public final class FlyoutUtils {
     private static boolean videoMarkedAsForKids;
     private static boolean isMyTabHistoryFlyout;
     private static boolean isShortFlyout;
-    private static volatile ChannelIdRequest flyoutChannelIdRequest;
+    private static ChannelIdRequest flyoutChannelIdRequest;
 
     private static Drawable getSettingsScreenDrawable(String drawableName) {
         return ResourceUtils.getDrawable(Utils.appIsUsingBoldIcons()
@@ -925,6 +925,7 @@ public final class FlyoutUtils {
                             }
 
                             flyoutChannelIdRequest = ChannelIdRequest.fetchRequestIfNeeded(flyoutVideoId);
+                            // Unfortunately must block main thread to ensure channel name is set.
                             Pair<String, String> remoteFlyoutChannelInfo = flyoutChannelIdRequest.getChannelInfo();
                             if (remoteFlyoutChannelInfo != null) {
                                 String remoteFlyoutChannelName = remoteFlyoutChannelInfo.first;
