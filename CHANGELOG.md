@@ -1,3 +1,26 @@
+## [1.44.0-dev.11](https://github.com/MorpheApp/morphe-patches/compare/v1.44.0-dev.10...v1.44.0-dev.11) (2026-09-19)
+
+### ✨ New Features
+
+* **YouTube - Channel search:** Show the searched channel in the results header ([c0e49d4](https://github.com/MorpheApp/morphe-patches/commit/c0e49d4ba97a5ca79033e379f3f581a395cda7a4))
+
+## [1.44.0-dev.10](https://github.com/MorpheApp/morphe-patches/compare/v1.44.0-dev.9...v1.44.0-dev.10) (2026-09-19)
+
+### 🚀 Updated App Support
+
+* **YouTube Music:** Add experimental support for `9.37.54` ([04f67ae](https://github.com/MorpheApp/morphe-patches/commit/04f67ae150d23b1c888061e9d723459736f8f52c))
+
+## [1.44.0-dev.9](https://github.com/MorpheApp/morphe-patches/compare/v1.44.0-dev.8...v1.44.0-dev.9) (2026-09-19)
+
+### 🐛 Bug Fixes
+
+* **YouTube - Minimal miniplayer:** Controls fade-in animation doesn't work ([396a0bc](https://github.com/MorpheApp/morphe-patches/commit/396a0bcd333423bb17cbe501599e70d80591f8d0))
+* **YouTube - Minimal miniplayer:** Interpolate minimizing transitions. ([13e653a](https://github.com/MorpheApp/morphe-patches/commit/13e653a68943b548728d85042e6785058b3cedb2))
+
+### 🚀 Updated App Support
+
+* **Reddit:** Add experimental support for `2026.38.0` ([404fc59](https://github.com/MorpheApp/morphe-patches/commit/404fc599fa082fd958780450a1ec57476295c712))
+
 ## [1.44.0-dev.8](https://github.com/MorpheApp/morphe-patches/compare/v1.44.0-dev.7...v1.44.0-dev.8) (2026-09-19)
 
 ### 🐛 Bug Fixes

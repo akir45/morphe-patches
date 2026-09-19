@@ -386,7 +386,6 @@ Prijave su javne i pregledavaju se prije nego što se kanal doda na popis. Uklan
   <!-- interaction.channelsearch.channelSearchPatch -->
   <string name="morphe_channel_search_title">Pretraži unutar kanala</string>
   <string name="morphe_channel_search_summary">Dok je kanal otvoren, pretraga se ograničava samo na taj kanal</string>
-  <string name="morphe_channel_search_results_title">Pretraga: %s</string>
   <string name="morphe_channel_search_no_results">Na ovom kanalu nema rezultata</string>
   <string name="morphe_channel_search_failed">Pretraživanje ovog kanala nije uspjelo</string>
   <!-- interaction.copyvideolink.copyVideoLinkButtonPatch -->
@@ -1273,6 +1272,7 @@ Video playback s AV1 može stutterati ili padati frame-ove."</string>
   <string name="morphe_spoof_video_streams_about_no_av1">• Nema AV1 video codec</string>
   <string name="morphe_spoof_video_streams_about_no_immersive_mode">• 360° VR imersivni mod nije dostupan</string>
   <string name="morphe_spoof_video_streams_about_no_stable_volume">• Nema stabilna volume</string>
+  <string name="morphe_spoof_video_streams_about_end_early">• Reprodukcija može završiti 1 sekundu ranije.</string>
   <string name="morphe_spoof_video_streams_about_js">• Ako neuspije deobfuskacija, reproducija može neuspjeti</string>
   <!-- "Force original audio" should match the language used in 'morphe_force_original_audio_title'. -->
   <string name="morphe_spoof_video_streams_about_no_force_original_audio">• Nema force original audio</string>

@@ -384,7 +384,7 @@ Rapporter är offentliga och granskas innan en kanal läggs till i en lista. Bor
   <!-- interaction.channelsearch.channelSearchPatch -->
   <string name="morphe_channel_search_title">Sök i kanalen</string>
   <string name="morphe_channel_search_summary">När du söker medan en kanal är öppen söker du bara i den kanalen</string>
-  <string name="morphe_channel_search_results_title">Sök: %s</string>
+  <string name="morphe_channel_search_results">Sökresultat för kanaler</string>
   <string name="morphe_channel_search_no_results">Inget hittades i den här kanalen</string>
   <string name="morphe_channel_search_failed">Det gick inte att söka i den här kanalen</string>
   <!-- interaction.copyvideolink.copyVideoLinkButtonPatch -->
@@ -1271,6 +1271,7 @@ Videouppspelning med AV1 kan hacka eller tappa bildrutor."</string>
   <string name="morphe_spoof_video_streams_about_no_av1">• Ingen AV1-videokodek</string>
   <string name="morphe_spoof_video_streams_about_no_immersive_mode">• 360° VR-integrerat läge is not available</string>
   <string name="morphe_spoof_video_streams_about_no_stable_volume">• Stabil volym är inte tillgängligt</string>
+  <string name="morphe_spoof_video_streams_about_end_early">• Uppspelningen kan sluta 1 sekund tidigt</string>
   <string name="morphe_spoof_video_streams_about_js">• Om deobfuskering misslyckas kan uppspelningen misslyckas</string>
   <!-- "Force original audio" should match the language used in 'morphe_force_original_audio_title'. -->
   <string name="morphe_spoof_video_streams_about_no_force_original_audio">• Tvinga ursprungligt ljud är inte tillgängligt</string>
