@@ -33,7 +33,6 @@ import app.morphe.extension.shared.patches.components.Filter;
 import app.morphe.extension.shared.patches.components.StringFilterGroup;
 import app.morphe.extension.youtube.innertube.NextResponseOuterClass.NewElement;
 import app.morphe.extension.youtube.patches.VersionCheckPatch;
-import app.morphe.extension.youtube.patches.utils.FlyoutUtils;
 import app.morphe.extension.youtube.settings.Settings;
 import app.morphe.extension.youtube.shared.PlayerType;
 
@@ -56,7 +55,6 @@ public class CommentsFilter extends Filter {
     private final StringFilterGroup comments;
     private final StringFilterGroup commentsFilterBar;
     private final StringFilterGroup emojiButton;
-    private final StringFilterGroup previewCommentDotsSelector;
 
     public CommentsFilter() {
         var channelGuidelines = new StringFilterGroup(
@@ -144,11 +142,6 @@ public class CommentsFilter extends Filter {
                 "comments_entry_point_teaser"
         );
 
-        previewCommentDotsSelector = new StringFilterGroup(
-                Settings.HIDE_COMMENTS_PREVIEW_COMMENT,
-                VIDEO_METADATA_CAROUSEL_PATH
-        );
-
         var thanksButton = new StringFilterGroup(
                 Settings.HIDE_COMMENTS_THANKS_BUTTON,
                 "super_thanks_button.e"
@@ -178,7 +171,6 @@ public class CommentsFilter extends Filter {
                 emojiButton,
                 giftAnimationAndCards,
                 previewComment,
-                previewCommentDotsSelector,
                 thanksButton,
                 timestampButton,
                 topFansButton
@@ -215,10 +207,6 @@ public class CommentsFilter extends Filter {
 
         if (matchedGroup == commentsFilterBar) {
             return Settings.HIDE_FILTER_BAR_IN_COMMENTS.get() && PlayerType.getCurrent().isMaximizedOrFullscreen();
-        }
-
-        if (matchedGroup == previewCommentDotsSelector) {
-            return path.contains("carousel_header") && path.endsWith("|ContainerType|ContainerType|ContainerType|");
         }
 
         return true;
@@ -370,8 +358,6 @@ public class CommentsFilter extends Filter {
      * Injection point.
      */
     public static byte[] onCommentsLoaded(byte[] bytes) {
-        FlyoutUtils.onCommentsLoaded(bytes);
-
         if (Settings.HIDE_COMMENTS_CAROUSEL.get() && !commentsCarouselFilterStrings.isEmpty()) {
             try {
                 var newElement = NewElement.parseFrom(bytes).toBuilder();
